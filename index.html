@@ -90,6 +90,10 @@ nav{flex-wrap:wrap}
 #ayudaInstalacion{margin-bottom:16px}
 #ayudaInstalacion p{margin-top:6px}
 @media(max-width:520px){#instalarApp{margin-left:0}}
+#accesoBase{margin-bottom:1rem}
+#formAcceso{display:flex;flex-wrap:wrap;gap:.65rem;align-items:end}
+#formAcceso label{flex:1 1 12rem}
+#estadoBase,#estadoConsulta,#estadoEnvio{color:var(--muted)}
 </style>
 <meta name="theme-color" content="#301849">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -107,10 +111,20 @@ nav{flex-wrap:wrap}
 <main>
 <noscript><p class="card">Para usar el formulario y ver el comprobante, abrí esta página en un navegador con JavaScript habilitado.</p></noscript>
 <div class="intro"><div class="hero-inner"><h1>Retiro de materiales</h1><p>Registrá lo que retirás del depósito y descargá el comprobante firmado.</p></div></div>
-<nav aria-label="Secciones"><button id="tabNuevo" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg>Nuevo retiro</button><button id="tabHistorial" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 6v6h6M12 7v5l3 2"/></svg>Historial local</button><button id="instalarApp" type="button" aria-controls="ayudaInstalacion" aria-expanded="false">Instalar app</button></nav>
+<nav aria-label="Secciones"><button id="tabNuevo" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4"/></svg>Nuevo retiro</button><button id="tabHistorial" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 6v6h6M12 7v5l3 2"/></svg>Historial de retiros</button><button id="instalarApp" type="button" aria-controls="ayudaInstalacion" aria-expanded="false">Instalar app</button></nav>
 <section id="ayudaInstalacion" class="card" aria-labelledby="instalacionTitulo" hidden>
   <div class="row"><h2 id="instalacionTitulo">Instalar Control de Materiales</h2><button id="cerrarInstalacion" type="button">Cerrar</button></div>
   <p id="pasosInstalacion" role="status"></p>
+</section>
+<section id="accesoBase" class="card" aria-labelledby="tituloAcceso">
+  <h2 id="tituloAcceso">Acceso a la base compartida</h2>
+  <form id="formAcceso">
+    <label>Correo <input name="email" type="email" autocomplete="username" required></label>
+    <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
+    <button id="entrarBase" type="submit">Ingresar</button>
+  </form>
+  <button id="salirBase" type="button" hidden>Cerrar sesión</button>
+  <p id="estadoBase" role="status"></p>
 </section>
 <div id="confirmado" class="success" role="status" hidden><strong id="confirmacion"></strong><p id="estadoGuardado"></p><button id="repetir">Volver a descargar PDF</button></div>
 <section id="escaner" class="card" aria-labelledby="escanerTitulo" hidden>
@@ -142,17 +156,18 @@ nav{flex-wrap:wrap}
 <button id="previsualizar" class="primary full" type="submit">Previsualizar comprobante</button><p id="mensaje" role="alert" tabindex="-1"></p></section>
 </div></div>
 </form>
-<section id="registros" class="card" hidden aria-labelledby="histTitulo"><div class="row"><h2 id="histTitulo"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 6v6h6M12 7v5l3 2"/></svg></span>Retiros de este navegador</h2><button id="csv">Exportar detalle CSV</button></div><p class="muted">Los retiros quedan en el dispositivo donde se registraron. Descargá cada PDF para entregarlo al responsable de cargarlo en SAP.</p><div id="historial"></div></section>
+<section id="registros" class="card" hidden aria-labelledby="histTitulo"><div class="row"><h2 id="histTitulo"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 6v6h6M12 7v5l3 2"/></svg></span>Retiros guardados</h2><button id="csv">Exportar detalle CSV</button></div><p class="muted">Los administradores pueden consultar todos los retiros. Cada técnico puede consultar sus propios comprobantes.</p><button id="actualizarBase" type="button">Actualizar retiros</button><p id="estadoConsulta" role="status"></p><div id="historial"></div></section>
 <section id="vistaPDF" aria-labelledby="vistaTitulo" hidden>
 <div class="dialog-head"><h2 id="vistaTitulo" tabindex="-1">Vista previa del comprobante</h2><button type="button" id="cerrarVista" aria-label="Volver al retiro">×</button></div>
 <div class="dialog-body"><div id="hojas"></div><a id="abrirPDF" target="_blank" rel="noopener">Abrir PDF completo en otra pestaña</a></div>
-<div class="dialog-actions"><button type="button" id="editar">Volver al retiro</button><button type="button" id="guardar" class="primary">Confirmar y descargar PDF</button></div>
+<div class="dialog-actions"><button type="button" id="editar">Volver al retiro</button><button type="button" id="guardar" class="primary">Guardar retiro y descargar PDF</button></div><p id="estadoEnvio" role="alert" tabindex="-1"></p>
 </section>
 </main>
 <script id="catalogo" type="application/json">[{"codigo": "404-4221-001-0042", "nombre": "Abrazadera Chica Diámetro 80 a 140 mm.", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0059", "nombre": "Abrazadera extra grande Diám 280-340 mm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0033", "nombre": "Abrazadera Grande Diám 160 a 200 mm.", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0039", "nombre": "Abrazadera Mediana Diám 120 a 160 mm.", "lote": "", "unidad": "UN"}, {"codigo": "104-1405-055-0019", "nombre": "Acoplador Direccional DC-12 Db 1 Ghz.HFC", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1405-055-0020", "nombre": "Acoplador Direccional DC-16 Db 750 Mhz.", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1405-055-0018", "nombre": "Acoplador Direccional DC-8 Db 1 Ghz. HFC", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1402-001-0011", "nombre": "Acoplador Optico Simplex SC/APC-SC/APC", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0046", "nombre": "Alambre p/devanar Acero 1mm Forrado PVC", "lote": "", "unidad": "KG"}, {"codigo": "407-4458-001-0010", "nombre": "Anteojos de Seguridad Amarillo", "lote": "", "unidad": "UN"}, {"codigo": "407-4458-001-0001", "nombre": "Anteojos de Seguridad Incoloro", "lote": "", "unidad": "UN"}, {"codigo": "407-4458-001-0005", "nombre": "Anteojos de Seguridad Oscuro", "lote": "", "unidad": "UN"}, {"codigo": "407-4458-001-0003", "nombre": "Antiparra Policarbonato Con Ventilación", "lote": "", "unidad": "UN"}, {"codigo": "407-4453-001-0002", "nombre": "Arnés de seguridad integral", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0020", "nombre": "Atenuador Pad 1Ghz NPB 00 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0021", "nombre": "Atenuador Pad 1Ghz NPB 01 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0022", "nombre": "Atenuador Pad 1Ghz NPB 02 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0023", "nombre": "Atenuador Pad 1Ghz NPB 03 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0024", "nombre": "Atenuador Pad 1Ghz NPB 04 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0025", "nombre": "Atenuador Pad 1Ghz NPB 05 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0026", "nombre": "Atenuador Pad 1Ghz NPB 06 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0027", "nombre": "Atenuador Pad 1Ghz NPB 07 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0028", "nombre": "Atenuador Pad 1Ghz NPB 08 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0029", "nombre": "Atenuador Pad 1Ghz NPB 09 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0030", "nombre": "Atenuador Pad 1Ghz NPB 10 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0031", "nombre": "Atenuador Pad 1Ghz NPB 11 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0032", "nombre": "Atenuador Pad 1Ghz NPB 12 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0033", "nombre": "Atenuador Pad 1Ghz NPB 13 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0034", "nombre": "Atenuador Pad 1Ghz NPB 14 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0035", "nombre": "Atenuador Pad 1Ghz NPB 15 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0036", "nombre": "Atenuador Pad 1Ghz NPB 16 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0037", "nombre": "Atenuador Pad 1Ghz NPB 17 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0038", "nombre": "Atenuador Pad 1Ghz NPB 18 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0039", "nombre": "Atenuador Pad 1Ghz NPB 19 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "403-4150-044-0040", "nombre": "Atenuador Pad 1Ghz NPB 20 Db C-Cor", "lote": "", "unidad": "UN"}, {"codigo": "407-4460-001-0002", "nombre": "Baliza triangulo p/vehiculos", "lote": "", "unidad": "UN"}, {"codigo": "407-4452-001-0009", "nombre": "Banderín de Señalización para Seguridad", "lote": "", "unidad": "UN"}, {"codigo": "407-4459-001-0013", "nombre": "BOTIN DE SEGURIDAD", "lote": "TALLE40", "unidad": "UN"}, {"codigo": "407-4459-001-0013", "nombre": "BOTIN DE SEGURIDAD", "lote": "TALLE42", "unidad": "UN"}, {"codigo": "407-4459-001-0013", "nombre": "BOTIN DE SEGURIDAD", "lote": "TALLE43", "unidad": "UN"}, {"codigo": "407-4459-001-0013", "nombre": "BOTIN DE SEGURIDAD", "lote": "TALLE44", "unidad": "UN"}, {"codigo": "407-4459-001-0013", "nombre": "BOTIN DE SEGURIDAD", "lote": "TALLE45", "unidad": "UN"}, {"codigo": "404-4221-001-0037", "nombre": "Bulón 5/16 X 32 , Tuerca y Arandela.", "lote": "", "unidad": "UN"}, {"codigo": "402-4070-001-0004", "nombre": "Cable coaxil .500 C/portante", "lote": "", "unidad": "M"}, {"codigo": "401-4002-001-0015", "nombre": "Cable coaxil p/Vid RG59 Belden Mod- 8241", "lote": "", "unidad": "M"}, {"codigo": "402-4070-001-0011", "nombre": "Cable coaxil RG11 C/portante", "lote": "", "unidad": "M"}, {"codigo": "402-4070-001-0002", "nombre": "Cable coaxil RG6 C/portante", "lote": "", "unidad": "M"}, {"codigo": "402-4073-001-0001", "nombre": "Cable de Datos UTP Cat 5 Interior", "lote": "", "unidad": "M"}, {"codigo": "402-4070-001-0017", "nombre": "Cable HDMI  para Deco TV", "lote": "", "unidad": "UN"}, {"codigo": "407-4452-001-0012", "nombre": "Cabo Punto Fijo - Anclaje 0,80 a 1,00 m", "lote": "", "unidad": "UN"}, {"codigo": "407-4452-001-0010", "nombre": "Cabo Vida 1,5-2 m amortig 1 gancho gde", "lote": "", "unidad": "UN"}, {"codigo": "406-4376-001-0030", "nombre": "Cadena eslabon Largo", "lote": "", "unidad": "M"}, {"codigo": "403-4157-041-0010", "nombre": "Caja Empalme NAP p/fusión x 16", "lote": "", "unidad": "UN"}, {"codigo": "403-4157-041-0023", "nombre": "Caja Empalme NAP p/fusión x 16 C/Derivac", "lote": "", "unidad": "UN"}, {"codigo": "403-4157-041-0039", "nombre": "Caja Empalme NAP p/f-with 1 1:8 splitter", "lote": "", "unidad": "UN"}, {"codigo": "403-4157-041-0038", "nombre": "Caja Empalme NAP p/f-with 2 1:8 splitter", "lote": "", "unidad": "UN"}, {"codigo": "403-4157-041-0003", "nombre": "Caja Empalme Opt. p/24 Fibras (fusiones)", "lote": "", "unidad": "UN"}, {"codigo": "403-4157-041-0027", "nombre": "Caja Empalme tipo Domo p/48F cierre Mec.", "lote": "", "unidad": "UN"}, {"codigo": "403-4157-041-0028", "nombre": "Caja Empalme tipo Domo p/96F cierre Mec.", "lote": "", "unidad": "UN"}, {"codigo": "407-4454-001-0027", "nombre": "CALZONCILLO TERMICO", "lote": "TALLE L", "unidad": "UN"}, {"codigo": "407-4454-001-0027", "nombre": "CALZONCILLO TERMICO", "lote": "TALLE M", "unidad": "UN"}, {"codigo": "407-4454-001-0027", "nombre": "CALZONCILLO TERMICO", "lote": "TALLE XL", "unidad": "UN"}, {"codigo": "407-4454-001-0032", "nombre": "CAMPERA MANTA DOBLE", "lote": "TALLE L", "unidad": "UN"}, {"codigo": "407-4454-001-0032", "nombre": "CAMPERA MANTA DOBLE", "lote": "TALLE M", "unidad": "UN"}, {"codigo": "407-4454-001-0032", "nombre": "CAMPERA MANTA DOBLE", "lote": "TALLE S", "unidad": "UN"}, {"codigo": "407-4454-001-0032", "nombre": "CAMPERA MANTA DOBLE", "lote": "TALLE XL", "unidad": "UN"}, {"codigo": "407-4457-001-0001", "nombre": "Capa para lluvia", "lote": "", "unidad": "UN"}, {"codigo": "407-4451-001-0006", "nombre": "Casco de Seg-con Cremallera y barbijo", "lote": "", "unidad": "UN"}, {"codigo": "407-4460-001-0007", "nombre": "Chaleco Fluor Naranja con Reflección", "lote": "", "unidad": "UN"}, {"codigo": "407-4454-001-0034", "nombre": "CHALECO TERMICO", "lote": "TALLE L", "unidad": "UN"}, {"codigo": "407-4454-001-0034", "nombre": "CHALECO TERMICO", "lote": "TALLE M", "unidad": "UN"}, {"codigo": "407-4454-001-0034", "nombre": "CHALECO TERMICO", "lote": "TALLE S", "unidad": "UN"}, {"codigo": "404-4223-001-0004", "nombre": "Cinta autosoldante  X 10  mts", "lote": "", "unidad": "UN"}, {"codigo": "407-4460-001-0010", "nombre": "Cinta plástica de seguridad PELIGRO", "lote": "", "unidad": "UN"}, {"codigo": "407-4452-001-0002", "nombre": "Cola Sujeción Nylon 2m c/ 2 gancho chico", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0072", "nombre": "Conector adapt KS a \"\"F\"\" sin bloq alim", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0050", "nombre": "Conector adaptador .500 a \"F\" Macho", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0026", "nombre": "Conector adaptador a 180º", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0023", "nombre": "Conector adaptador a 90º", "lote": "", "unidad": "UN"}, {"codigo": "401-4004-001-0229", "nombre": "Conector BNC Macho Compresion", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0003", "nombre": "Conector C/Pin .500 3 cuerpos", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0004", "nombre": "Conector C/Pin .750", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0035", "nombre": "Conector carga final 75  Ohm.", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-040-0014", "nombre": "Conector de campo para FO FIG8 SC/APC-SM", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0020", "nombre": "Conector de línea  RG11", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0032", "nombre": "Conector Doble Pin KS - KS M", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0011", "nombre": "Conector Empalme .500", "lote": "", "unidad": "UN"}, {"codigo": "403-4153-001-0076", "nombre": "Conector H Chasis 5.5mm p/ Fuente 12 VCC", "lote": "", "unidad": "UN"}, {"codigo": "407-4460-001-0001", "nombre": "Cono Naranja Plástico", "lote": "", "unidad": "UN"}, {"codigo": "405-4303-001-0091", "nombre": "Control Remoto p/Decos HD Kids", "lote": "", "unidad": "UN"}, {"codigo": "405-4303-002-0083", "nombre": "Control Remoto Universal p/Decos T4H", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "404-4221-001-0108", "nombre": "Cruz de Reserva de F.O 30 cm Diametro", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0017", "nombre": "Cruz de Reserva de F.O 50 cm Diametro", "lote": "", "unidad": "UN"}, {"codigo": "408-4620-001-0035", "nombre": "Cubierta p/Movil 175/70/13", "lote": "", "unidad": "UN"}, {"codigo": "405-4303-002-0043", "nombre": "Deco Digital iPO80 - SD- Sview", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0053", "nombre": "Deco Digital iPO85 - HD - Sview", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0075", "nombre": "Deco HD Hibrido Conax", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0077", "nombre": "Deco HD MPEG-4 Zapper PVR Arion", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0095", "nombre": "Deco HD MPEG-4 Zapper PVR Crenova", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "405-4303-002-0095", "nombre": "Deco HD MPEG-4 Zapper PVR Crenova", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0096", "nombre": "Deco HD MPEG-4 Zapper PVR EKT", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0094", "nombre": "Deco HD MPEG-4 Zapper PVR Intek", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "405-4303-002-0094", "nombre": "Deco HD MPEG-4 Zapper PVR Intek", "lote": "USADO", "unidad": "UN"}, {"codigo": "406-4373-001-0003", "nombre": "Destornillador buscapolo", "lote": "", "unidad": "UN"}, {"codigo": "104-1408-019-0003", "nombre": "Ecualizador de Linea 750 Mhz 9db", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1408-042-0007", "nombre": "Ecualizador de Linea 750 Mhz.11 db c/Rev", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "403-4151-020-0002", "nombre": "EQ GM-1GHz-03 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0004", "nombre": "EQ GM-1GHz-06 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0006", "nombre": "EQ GM-1GHz-09 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0007", "nombre": "EQ GM-1GHz-10,5 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0008", "nombre": "EQ GM-1GHz-12 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0009", "nombre": "EQ GM-1GHz-13,5 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0010", "nombre": "EQ GM-1GHz-15 Db", "lote": "", "unidad": "UN"}, {"codigo": "403-4151-020-0012", "nombre": "EQ GM-1GHz-18 Db", "lote": "", "unidad": "UN"}, {"codigo": "407-4450-001-0016", "nombre": "Escalera ext dieléc 2 elem 7,00 m 26 esc", "lote": "", "unidad": "UN"}, {"codigo": "407-4450-001-0011", "nombre": "Escalera Tijera o Extens 1,90m 12 escal", "lote": "", "unidad": "UN"}, {"codigo": "402-4072-001-0014", "nombre": "Fibra Optica Monom. 12 H ADSS vano 80m", "lote": "", "unidad": "M"}, {"codigo": "402-4072-001-0015", "nombre": "Fibra Optica Monom. 24 H ADSS vano 80m", "lote": "", "unidad": "M"}, {"codigo": "402-4072-001-0017", "nombre": "Fibra Optica Monom. 48 H ADSS vano 80m", "lote": "", "unidad": "M"}, {"codigo": "402-4072-001-0018", "nombre": "Fibra Optica Monom. 96 H ADSS vano 80m", "lote": "", "unidad": "M"}, {"codigo": "402-4072-001-0023", "nombre": "Fibra Optica Monomodo Drop 1 Hilos Fig8", "lote": "", "unidad": "M"}, {"codigo": "405-4300-061-0003", "nombre": "Ficha \"\"F\"\" de compresion RG6", "lote": "", "unidad": "UN"}, {"codigo": "405-4300-001-0013", "nombre": "Ficha \"F\" compresión RG11", "lote": "", "unidad": "UN"}, {"codigo": "405-4300-001-0027", "nombre": "Ficha Adaptador \"F\" Hembra a Pin Grue", "lote": "", "unidad": "UN"}, {"codigo": "405-4300-001-0018", "nombre": "Ficha Antirrobo Metálica p/Tap", "lote": "", "unidad": "UN"}, {"codigo": "405-4300-001-0002", "nombre": "Ficha Atenuador \"F\" 3 Db", "lote": "", "unidad": "UN"}, {"codigo": "401-4305-001-0075", "nombre": "Ficha RJ45 Categoria 5 Extendido-Comun", "lote": "", "unidad": "UN"}, {"codigo": "405-4300-001-0016", "nombre": "Ficha Unión doble Hembra H-H", "lote": "", "unidad": "UN"}, {"codigo": "104-1404-057-0015", "nombre": "Fuente Aliment 220/60 V FR 15 A.", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1404-057-0021", "nombre": "Fuente DC-DC Step Down", "lote": "", "unidad": "UN"}, {"codigo": "401-4305-001-0078", "nombre": "Fuente de CC 12 Volt x 1 A- Pin 2,1 mm", "lote": "", "unidad": "UN"}, {"codigo": "401-4305-001-0096", "nombre": "Fuente de CC 12 Volt x 1 A- Pin 2,5 mm", "lote": "", "unidad": "UN"}, {"codigo": "401-4305-001-0054", "nombre": "Fuente de CC 12 Volt x 2.5 A- Pin 2,1 mm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0092", "nombre": "Gancho p/Mordaza DROP FO", "lote": "", "unidad": "UN"}, {"codigo": "405-4303-001-0016", "nombre": "Grampa clavo int.RG6 Negra BOLSA x 100", "lote": "", "unidad": "UN"}, {"codigo": "407-4455-001-0012", "nombre": "Guante de Seguridad Medio Paseo", "lote": "", "unidad": "UN"}, {"codigo": "407-4455-001-0007", "nombre": "Guante Dielectr Clase 00 T Prueba 2.500V", "lote": "", "unidad": "UN"}, {"codigo": "407-4455-001-0008", "nombre": "Guante Tejido Algodón Moteado PVC 1 Cara", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0066", "nombre": "Hebilla p/ Suncho de Acero  Fijaciones", "lote": "", "unidad": "UN"}, {"codigo": "406-4370-001-0024", "nombre": "Herramienta de Compresión Axial", "lote": "", "unidad": "UN"}, {"codigo": "405-4305-001-0002", "nombre": "Identificador de cable Azul", "lote": "", "unidad": "UN"}, {"codigo": "405-4305-001-0001", "nombre": "Identificador de cable Rojo", "lote": "", "unidad": "UN"}, {"codigo": "104-1407-055-0003", "nombre": "Insertor de Potencia 1Ghz  15Amper.", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1407-055-0002", "nombre": "Insertor de Potencia 1Ghz 20 Amper", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "404-4221-001-0064", "nombre": "Kit de Retencion para F.O.", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0068", "nombre": "Kit de Suspension pasante para F.O.", "lote": "", "unidad": "UN"}, {"codigo": "103-1306-004-0008", "nombre": "Lapiz Optico / Prueba de Luz p/ F.O.", "lote": "", "unidad": "UN"}, {"codigo": "104-1403-055-0015", "nombre": "Line Extender 1 GHz", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "404-4224-001-0006", "nombre": "Linga acero forrada 4,8 mm.", "lote": "", "unidad": "M"}, {"codigo": "407-4451-001-0001", "nombre": "Linterna de Vincha", "lote": "", "unidad": "UN"}, {"codigo": "406-4371-001-0047", "nombre": "Llave p/\"F\" de Seguridad Gilbert Larga", "lote": "", "unidad": "UN"}, {"codigo": "407-4454-001-0037", "nombre": "MAMELUCO TERMICO MASCULINO", "lote": "TALLE L", "unidad": "UN"}, {"codigo": "407-4454-001-0037", "nombre": "MAMELUCO TERMICO MASCULINO", "lote": "TALLE M", "unidad": "UN"}, {"codigo": "407-4454-001-0037", "nombre": "MAMELUCO TERMICO MASCULINO", "lote": "TALLE XL", "unidad": "UN"}, {"codigo": "406-4377-001-0004", "nombre": "Máquina Cortadora de Fibra Optica", "lote": "", "unidad": "UN"}, {"codigo": "407-4456-001-0005", "nombre": "Matafuego Polvo ABC 1 Kg.  (Autos)", "lote": "", "unidad": "UN"}, {"codigo": "406-4378-001-0005", "nombre": "Mecha de Acero Rapido de 10 mm", "lote": "", "unidad": "UN"}, {"codigo": "103-1306-004-0019", "nombre": "Medidor de potencia  PON con VFL", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0050", "nombre": "Mensula  Suspens c/hierro en U c/morseto", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0088", "nombre": "Mensula Soporte para Kit Ret/Susp FO", "lote": "", "unidad": "UN"}, {"codigo": "104-1403-055-0019", "nombre": "Minibridger 1Ghz 3 sal. Completo", "lote": "", "unidad": "UN"}, {"codigo": "403-1410-001-0043", "nombre": "Mod-Eléctrico-SFP-CISCO 100 mts", "lote": "", "unidad": "UN"}, {"codigo": "105-1506-001-0096", "nombre": "Módulo SFP+ SHORT REACH (300M)", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0027", "nombre": "Morseto chapa galvanizado 1 bulón", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0013", "nombre": "Morseto Cruce americano", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0032", "nombre": "Morseto Galvanizado 3 bulónes", "lote": "", "unidad": "UN"}, {"codigo": "104-1401-044-0021", "nombre": "Nodo Optico 1 Ghz  4Port AltaGan FD", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1401-044-0028", "nombre": "Nodo Optico 1Ghz  4Port HGain Seg. 2x2", "lote": "", "unidad": "UN"}, {"codigo": "405-4303-002-0102", "nombre": "ONT S/RF(4GE+WiFi+2FXS+1USB) Zhone 2426A", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0105", "nombre": "ONT S/RF(4GE+WiFi+2FXS+1USB)Zhone 2426A1", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "405-4303-002-0105", "nombre": "ONT S/RF(4GE+WiFi+2FXS+1USB)Zhone 2426A1", "lote": "USADO", "unidad": "UN"}, {"codigo": "405-4303-002-0101", "nombre": "ONT(4GE+WiFi+2FXS+1USB+1RF)Zhone 2427A", "lote": "USADO", "unidad": "UN"}, {"codigo": "407-4454-001-0038", "nombre": "PANTALON CARGO", "lote": "TALLE44", "unidad": "UN"}, {"codigo": "407-4454-001-0038", "nombre": "PANTALON CARGO", "lote": "TALLE46", "unidad": "UN"}, {"codigo": "407-4454-001-0038", "nombre": "PANTALON CARGO", "lote": "TALLE48", "unidad": "UN"}, {"codigo": "403-4155-001-0023", "nombre": "Patch-FO-SM-SC/APC-SC/APC-Simplex-2mts", "lote": "", "unidad": "UN"}, {"codigo": "403-4155-001-0035", "nombre": "Patch-FO-SM-SC/APC-SC/APC-Simplex-3mts", "lote": "", "unidad": "UN"}, {"codigo": "406-4374-001-0020", "nombre": "Pelacable coaxil .500 Comm/Scope P1,P3", "lote": "", "unidad": "UN"}, {"codigo": "406-4375-001-0001", "nombre": "Pelavaina coaxil .500 Comm/Scope P3", "lote": "", "unidad": "UN"}, {"codigo": "403-4156-001-0006", "nombre": "Pigtail Optico-SM-LC/PC-Simplex-1mt", "lote": "", "unidad": "UN"}, {"codigo": "401-4305-035-0002", "nombre": "Pila tipo  AAA", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0157", "nombre": "Piton cerrado con tope para tarugo de 8", "lote": "", "unidad": "UN"}, {"codigo": "105-1506-001-0127", "nombre": "Placa Controladora JUNIPER RE-S-MX104-R", "lote": "", "unidad": "UN"}, {"codigo": "105-1506-001-0131", "nombre": "Placa Multiservices JUNIPER MS-MIC-16G", "lote": "", "unidad": "UN"}, {"codigo": "407-4452-001-0008", "nombre": "Portaherramientas Individual", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0049", "nombre": "Precinto fijo plástico  19 cm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0160", "nombre": "Preformado Ret.Alum.p/ADSS 10,3a11,2mm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0148", "nombre": "Preformado Ret.Alum.p/ADSS 11 a 11,9mm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0082", "nombre": "Preformado Retencion p/Tendido FO", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0159", "nombre": "Preformado Susp.Alum.p/ADSS 10,3a11,2mm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0154", "nombre": "Preformado Susp.Alum.p/ADSS 11 a 11,9mm", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0138", "nombre": "Prolongador SIPA p/retencion drop 40mm", "lote": "", "unidad": "UN"}, {"codigo": "407-4450-080-0001", "nombre": "Repto Compl. para Zapata Escalera Cuidex", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0071", "nombre": "Retencion /Tensor para Fibra Drop", "lote": "", "unidad": "UN"}, {"codigo": "404-4222-001-0006", "nombre": "Retención tipo telefónica", "lote": "", "unidad": "UN"}, {"codigo": "405-4303-001-0078", "nombre": "Roseta Optica para FTTH SC/APC", "lote": "", "unidad": "UN"}, {"codigo": "407-4461-001-0012", "nombre": "Soga de Nylon Diametro 12 mm", "lote": "", "unidad": "M"}, {"codigo": "407-4461-001-0010", "nombre": "Soga de Nylon Diametro 8 mm", "lote": "", "unidad": "M"}, {"codigo": "404-4221-001-0131", "nombre": "Soporte Aislador Polimérico DROP", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0091", "nombre": "Soporte p/Retencion DROP FO c/Bulon", "lote": "", "unidad": "UN"}, {"codigo": "405-4301-001-0011", "nombre": "Splitter  X 2 salidas Domiciliario", "lote": "", "unidad": "UN"}, {"codigo": "405-4301-001-0002", "nombre": "Splitter  X 3 salidas Domiciliario", "lote": "", "unidad": "UN"}, {"codigo": "405-4301-001-0003", "nombre": "Splitter  X 4 salidas Domiciliario", "lote": "", "unidad": "UN"}, {"codigo": "104-1405-055-0016", "nombre": "Splitter de Linea DD-2 Db 1 Ghz. HFC", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1405-055-0017", "nombre": "Splitter de Linea DD-3 Db 1 Ghz. HFC 3P", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "403-1409-001-0022", "nombre": "Splitter opt/Tipo PLC 1x2 s/conectorizar", "lote": "", "unidad": "UN"}, {"codigo": "403-1409-001-0018", "nombre": "Splitter opt/Tipo PLC 1x4 conectorizado", "lote": "", "unidad": "UN"}, {"codigo": "403-1409-001-0020", "nombre": "Splitter opt/Tipo PLC 1x6 conectorizado", "lote": "", "unidad": "UN"}, {"codigo": "403-1409-001-0019", "nombre": "Splitter opt/Tipo PLC 1x8 conectorizado", "lote": "", "unidad": "UN"}, {"codigo": "401-4001-038-0002", "nombre": "Splitter Satelital 12-3404 4 Salidas", "lote": "", "unidad": "UN"}, {"codigo": "404-4221-001-0065", "nombre": "Suncho de Acero Inox  19 mm-Fijaciones", "lote": "", "unidad": "M"}, {"codigo": "104-1406-055-0052", "nombre": "Tap de 1 Ghz, 11 db  HFC, 4 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-019-0059", "nombre": "Tap de 1 Ghz, 11 db HFC , 8 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0053", "nombre": "Tap de 1 Ghz, 14 db  HFC, 4 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0060", "nombre": "Tap de 1 Ghz, 14 db  HFC, 8 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0054", "nombre": "Tap de 1 Ghz, 17 db  HFC, 4 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0062", "nombre": "Tap de 1 Ghz, 17 db  HFC, 8 puertos", "lote": "", "unidad": "UN"}, {"codigo": "104-1406-055-0055", "nombre": "Tap de 1 Ghz, 20 db  HFC, 4 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0063", "nombre": "Tap de 1 Ghz, 20 db  HFC, 8 puertos", "lote": "", "unidad": "UN"}, {"codigo": "104-1406-055-0056", "nombre": "Tap de 1 Ghz, 23 db  HFC, 4 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0064", "nombre": "Tap de 1 Ghz, 23 db  HFC, 8 puertos", "lote": "", "unidad": "UN"}, {"codigo": "104-1406-055-0057", "nombre": "Tap de 1 Ghz, 26/23 dB, FD 4 Puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-019-0066", "nombre": "Tap de 1 Ghz, 26/23 dB, FD 8 Puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0058", "nombre": "Tap de 1 Ghz, 29/23 dB, FD 4 Puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-019-0067", "nombre": "Tap de 1 Ghz, 29/23 dB, FD 8 Puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-042-0061", "nombre": "Tap de 1 Ghz, 32 db  HFC, 4 puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-019-0068", "nombre": "Tap de 1 Ghz, 32/23 dB, FD 8 Puertos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "104-1406-055-0059", "nombre": "Tap de 1 Ghz, 8 db HFC Terminal, 4 ptos", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "405-4303-002-0070", "nombre": "Tarjeta p/Decodificador CAS", "lote": "NUEVO", "unidad": "UN"}, {"codigo": "405-4303-002-0070", "nombre": "Tarjeta p/Decodificador CAS", "lote": "USADO", "unidad": "UN"}, {"codigo": "406-4370-001-0027", "nombre": "Tijera para corte de kevlar", "lote": "", "unidad": "UN"}, {"codigo": "404-4222-001-0005", "nombre": "Torniqueta Nº7 zincado", "lote": "", "unidad": "UN"}, {"codigo": "104-1402-044-0017", "nombre": "Transmisor Optico Rackeable 10 mW", "lote": "", "unidad": "UN"}, {"codigo": "404-4223-001-0007", "nombre": "Tubo Termocontraíble para .500", "lote": "", "unidad": "UN"}, {"codigo": "404-4223-001-0008", "nombre": "Tubo Termocontraíble para .750", "lote": "", "unidad": "UN"}]</script>
+<script src="./base-config.js"></script>
+<script src="./base.js"></script>
 <script>
 const el = id => document.getElementById(id);
-const clave = 'supercanal-retiros-0062-v1';
 const normal = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 const catalogo = JSON.parse(el('catalogo').textContent).map((m, id) => ({
   ...m, id, serializado:/^(ONT\b|Deco\b|Tarjeta\b)/i.test(m.nombre), buscar: normal(m.codigo + ' ' + m.nombre + ' ' + m.lote)
@@ -328,10 +343,76 @@ const fecha = new Intl.DateTimeFormat('es-AR', {dateStyle:'short',timeStyle:'sho
 const canvas = el('firma');
 const ctx = canvas.getContext('2d');
 let trazos = [], activo, ultimo, registros = [];
-try {
-  const guardado = JSON.parse(localStorage.getItem(clave) || '[]');
-  if (Array.isArray(guardado)) registros = guardado;
-} catch {}
+let sesionVista = 0;
+let ultimaConsulta = 0;
+el('formAcceso').onsubmit = async event => {
+  event.preventDefault();
+  const formulario = event.currentTarget;
+  const datos = new FormData(formulario);
+  el('entrarBase').disabled = true;
+  el('estadoBase').textContent = 'Verificando acceso…';
+  try {
+    const administrador = await baseRetiros.ingresar(datos.get('email'),datos.get('password'));
+    sesionVista++;
+    registros = [];
+    ultimo = undefined;
+    el('confirmado').hidden = true;
+    formulario.reset();
+    formulario.hidden = true;
+    el('salirBase').hidden = false;
+    el('estadoBase').textContent = administrador ? 'Sesión de administración iniciada.' : 'Sesión de técnico iniciada.';
+    if (!el('registros').hidden) cargarHistorial();
+  } catch (error) {
+    el('estadoBase').textContent = error.message;
+  } finally {
+    el('entrarBase').disabled = false;
+  }
+};
+el('salirBase').onclick = () => {
+  baseRetiros.salir();
+  sesionVista++;
+  registros = [];
+  ultimo = undefined;
+  borrador = undefined;
+  el('retiro').reset();
+  seleccion.clear();
+  seriales.clear();
+  actualizarTecnicos();
+  cambiarDetalle();
+  if (vistaURL) URL.revokeObjectURL(vistaURL);
+  vistaURL = undefined;
+  el('hojas').replaceChildren();
+  el('confirmado').hidden = true;
+  el('formAcceso').hidden = false;
+  el('salirBase').hidden = true;
+  el('estadoBase').textContent = 'Sesión cerrada.';
+  seccion(false);
+};
+async function cargarHistorial() {
+  const sesion = sesionVista;
+  const consulta = ++ultimaConsulta;
+  el('estadoConsulta').textContent = 'Consultando la base compartida…';
+  try {
+    const datos = await baseRetiros.consultar();
+    if (sesion !== sesionVista || consulta !== ultimaConsulta) return;
+    registros = datos;
+    mostrarHistorial();
+    el('estadoConsulta').textContent = '';
+  } catch (error) {
+    if (sesion !== sesionVista || consulta !== ultimaConsulta) return;
+    registros = [];
+    mostrarHistorial();
+    el('estadoConsulta').textContent = error.message;
+    if (error.message === 'Iniciá sesión nuevamente.') pedirAcceso();
+  }
+}
+function pedirAcceso() {
+  el('formAcceso').hidden = false;
+  el('salirBase').hidden = true;
+  el('formAcceso').querySelector('input').focus();
+}
+el('actualizarBase').onclick = cargarHistorial;
+
 const texto = (tag, value) => Object.assign(document.createElement(tag), {textContent:value});
 function boton(value, action, label) {
   const b = texto('button', value);
@@ -624,6 +705,7 @@ function mostrarVista(r) {
   cerrarEscaner(false);
   const renglones = renglonesComprobante(r);
   borrador = r;
+  el('estadoEnvio').textContent = '';
   const panel = el('hojas');
   panel.replaceChildren();
   for (let offset = 0; offset < renglones.length; offset += 14) {
@@ -687,20 +769,26 @@ function volverAlRetiro() {
   seccion(false);
   enfoqueVisible(el('previsualizar'));
 }
-function guardarRetiro() {
+async function guardarRetiro() {
   const r = borrador;
-  if (!r) return;
-  borrador = undefined;
-  let guardado = false;
+  if (!r || el('guardar').disabled) return;
+  const bloqueo = ['guardar','editar','cerrarVista','tabNuevo','tabHistorial','salirBase'].map(el);
+  bloqueo.forEach(control=>control.disabled = true);
+  const aviso = el('estadoEnvio');
+  aviso.textContent = 'Guardando en la base compartida…';
   try {
-    const actual = JSON.parse(localStorage.getItem(clave)||'[]');
-    const nuevos = [r,...(Array.isArray(actual)?actual:registros)];
-    localStorage.setItem(clave,JSON.stringify(nuevos));
-    registros = nuevos;
-    guardado = true;
-  } catch {}
+    await baseRetiros.guardar(r);
+  } catch (error) {
+    aviso.textContent = error.message+' El retiro sigue en pantalla para que puedas reintentar.';
+    enfoqueVisible(aviso);
+    if (error.message === 'Iniciá sesión nuevamente.' || !el('formAcceso').hidden) pedirAcceso();
+    return;
+  } finally {
+    bloqueo.forEach(control=>control.disabled = false);
+  }
+  borrador = undefined;
+  aviso.textContent = '';
   ultimo = r;
-  bajarPDF(r);
   seccion(false);
   el('retiro').reset();
   seleccion.clear();
@@ -708,11 +796,10 @@ function guardarRetiro() {
   actualizarTecnicos();
   cambiarDetalle();
   el('confirmacion').textContent = 'Comprobante '+r.folio;
-  el('estadoGuardado').textContent = guardado
-    ? 'Podés volver a descargar el PDF desde el historial de este navegador.'
-    : 'El navegador no pudo guardar el retiro. Conservá el PDF descargado.';
+  el('estadoGuardado').textContent = 'Retiro guardado en la base compartida. Podés descargar el PDF desde el historial.';
   el('confirmado').hidden = false;
   el('confirmado').scrollIntoView({block:'nearest'});
+  bajarPDF(r);
 }
 function seccion(historial) {
   if (historial) cerrarEscaner(false);
@@ -725,16 +812,8 @@ function seccion(historial) {
   el('confirmado').hidden = historial || vistaPrevia || !ultimo;
   if (historial) mostrarHistorial();
 }
-window.addEventListener('storage',event=>{
-  if(event.key!==clave && event.key!==null) return;
-  try {
-    const actual = JSON.parse(localStorage.getItem(clave)||'[]');
-    if(Array.isArray(actual)) registros = actual;
-    if(!el('registros').hidden) mostrarHistorial();
-  } catch {}
-});
 el('tabNuevo').onclick = () => {borrador = undefined; seccion(false);};
-el('tabHistorial').onclick = () => seccion(true);
+el('tabHistorial').onclick = () => {seccion(true); cargarHistorial();};
 el('repetir').onclick = () => bajarPDF(ultimo);
 el('csv').onclick = exportar;
 el('borrar').onclick = invalidarFirma;
