@@ -1,6 +1,6 @@
 const scope = self.registration.scope;
 const prefix = 'control-materiales-super:' + scope + ':';
-const version = prefix + '4';
+const version = prefix + '7';
 const home = new URL('./', scope).href;
 const files = ['./', './index.html', './manifest.webmanifest', './instalar.js', './base-config.js', './base.js', './icons/icon-192.png', './icons/icon-512.png'];
 const urls = new Set(files.map(file => new URL(file, scope).href));

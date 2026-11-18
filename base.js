@@ -4,7 +4,7 @@
     && /^sb_publishable_[A-Za-z0-9_-]+$/.test(config.clavePublicable);
   const base = config.url.replace(/\/$/, '');
   let token;
-  async function solicitar(ruta, opciones = {}) {
+  async function solicitar(ruta, opciones = {}, usarSesion = true) {
     if (!valido) throw new Error('La base compartida todavía no está configurada.');
     let respuesta;
     try {
@@ -14,7 +14,7 @@
         headers: {
           apikey: config.clavePublicable,
           'Content-Type':'application/json',
-          ...(token ? {Authorization:'Bearer '+token} : {}),
+          ...(usarSesion && token ? {Authorization:'Bearer '+token} : {}),
           ...opciones.headers,
         },
       });
@@ -22,8 +22,8 @@
       throw new Error('No hubo respuesta de la base. Revisá la conexión e intentá nuevamente.');
     }
     if (!respuesta.ok) {
-      if (respuesta.status === 401) token = undefined;
-      throw new Error(respuesta.status === 401 ? 'Iniciá sesión nuevamente.' : 'La base rechazó la operación. Revisá tu acceso o consultá con un administrador.');
+      if (usarSesion && respuesta.status === 401) token = undefined;
+      throw new Error(usarSesion && respuesta.status === 401 ? 'Iniciá sesión nuevamente.' : 'La base rechazó la operación. Consultá con un administrador.');
     }
     return respuesta.json();
   }
@@ -43,8 +43,8 @@
     },
     salir() { token = undefined; },
     async guardar(retiro) {
-      if (!token) throw new Error('Ingresá con tu cuenta para guardar el retiro.');
-      const folio = await solicitar('/rest/v1/rpc/guardar_retiro_materiales', {method:'POST',body:JSON.stringify({p_retiro:retiro})});
+      const folio = await solicitar('/rest/v1/rpc/recibir_retiro_materiales',
+        {method:'POST',body:JSON.stringify({p_retiro:retiro})}, false);
       if (folio !== retiro.folio) throw new Error('No se pudo verificar que el retiro quedó guardado.');
     },
     async consultar() {

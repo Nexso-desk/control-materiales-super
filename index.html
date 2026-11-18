@@ -156,7 +156,7 @@ nav{flex-wrap:wrap}
 <button id="previsualizar" class="primary full" type="submit">Previsualizar comprobante</button><p id="mensaje" role="alert" tabindex="-1"></p></section>
 </div></div>
 </form>
-<section id="registros" class="card" hidden aria-labelledby="histTitulo"><div class="row"><h2 id="histTitulo"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 6v6h6M12 7v5l3 2"/></svg></span>Retiros guardados</h2><button id="csv">Exportar detalle CSV</button></div><p class="muted">Los administradores pueden consultar todos los retiros. Cada técnico puede consultar sus propios comprobantes.</p><button id="actualizarBase" type="button">Actualizar retiros</button><p id="estadoConsulta" role="status"></p><div id="historial"></div></section>
+<section id="registros" class="card" hidden aria-labelledby="histTitulo"><div class="row"><h2 id="histTitulo"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 6v6h6M12 7v5l3 2"/></svg></span>Retiros guardados</h2><button id="csv">Exportar detalle CSV</button></div><p class="muted">Consultá los retiros de este navegador y, con sesión iniciada, los movimientos de la base compartida que tu cuenta puede ver.</p><button id="actualizarBase" type="button">Actualizar retiros</button><p id="estadoConsulta" role="status"></p><button id="ingresarDesdeHistorial" type="button" hidden>Ingresar a la base compartida</button><div id="historial"></div></section>
 <section id="vistaPDF" aria-labelledby="vistaTitulo" hidden>
 <div class="dialog-head"><h2 id="vistaTitulo" tabindex="-1">Vista previa del comprobante</h2><button type="button" id="cerrarVista" aria-label="Volver al retiro">×</button></div>
 <div class="dialog-body"><div id="hojas"></div><a id="abrirPDF" target="_blank" rel="noopener">Abrir PDF completo en otra pestaña</a></div>
@@ -345,6 +345,21 @@ const ctx = canvas.getContext('2d');
 let trazos = [], activo, ultimo, registros = [];
 let sesionVista = 0;
 let ultimaConsulta = 0;
+const claveHistorialLocal = 'supercanal-retiros-0062-v1';
+function leerHistorialLocal() {
+  const datos = JSON.parse(localStorage.getItem(claveHistorialLocal) || '[]');
+  if (!Array.isArray(datos)) throw new Error('El historial local tiene un formato inválido.');
+  return datos;
+}
+function cargarHistorialLocal() {
+  try {
+    registros = leerHistorialLocal();
+    return 'Mostrando los retiros de este navegador.';
+  } catch {
+    registros = [];
+    return 'No se pudo leer el historial guardado en este navegador.';
+  }
+}
 let seccionActual = 'retiro';
 let volverTrasAcceso;
 el('formAcceso').onsubmit = async event => {
@@ -395,35 +410,43 @@ el('salirBase').onclick = () => {
   seccion('base');
 };
 async function cargarHistorial() {
-  const sesion = sesionVista;
   const consulta = ++ultimaConsulta;
-  el('estadoConsulta').textContent = 'Consultando la base compartida…';
+  const sesion = sesionVista;
+  const estadoLocal = cargarHistorialLocal();
+  mostrarHistorial();
+  const sinSesion = !el('formAcceso').hidden;
+  el('ingresarDesdeHistorial').hidden = !sinSesion;
+  el('estadoConsulta').textContent = estadoLocal;
+  if (sinSesion) return;
+  el('estadoConsulta').textContent = estadoLocal + ' Consultando también la base compartida…';
   try {
     const datos = await baseRetiros.consultar();
     if (sesion !== sesionVista || consulta !== ultimaConsulta) return;
-    registros = datos;
+    const porFolio = new Map(registros.map(retiro => [retiro.folio, retiro]));
+    for (const retiro of datos) porFolio.set(retiro.folio, retiro);
+    registros = [...porFolio.values()].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
     mostrarHistorial();
-    el('estadoConsulta').textContent = '';
+    el('estadoConsulta').textContent = estadoLocal + ' Consulta de la base compartida completada.';
   } catch (error) {
     if (sesion !== sesionVista || consulta !== ultimaConsulta) return;
-    registros = [];
-    mostrarHistorial();
-    el('estadoConsulta').textContent = error.message;
-    if (seccionActual === 'historial' &&
-        (error.message === 'Iniciá sesión nuevamente.' || !el('formAcceso').hidden)) {
-      pedirAcceso('historial', error.message);
-    }
+    el('estadoConsulta').textContent = estadoLocal + ' ' + error.message;
+    if (error.message === 'Iniciá sesión nuevamente.') mostrarFormularioAcceso();
+    el('ingresarDesdeHistorial').hidden = el('formAcceso').hidden;
   }
 }
 function pedirAcceso(destino, mensaje) {
   volverTrasAcceso = destino;
-  el('formAcceso').hidden = false;
-  el('salirBase').hidden = true;
+  mostrarFormularioAcceso();
   el('estadoBase').textContent = mensaje;
   seccion('base');
   enfoqueVisible(el('formAcceso').querySelector('input'));
 }
+function mostrarFormularioAcceso() {
+  el('formAcceso').hidden = false;
+  el('salirBase').hidden = true;
+}
 el('actualizarBase').onclick = cargarHistorial;
+el('ingresarDesdeHistorial').onclick = () => pedirAcceso('historial', 'Ingresá con tu cuenta para consultar los retiros.');
 
 const texto = (tag, value) => Object.assign(document.createElement(tag), {textContent:value});
 function boton(value, action, label) {
@@ -717,7 +740,7 @@ function mostrarVista(r) {
   cerrarEscaner(false);
   const renglones = renglonesComprobante(r);
   borrador = r;
-  el('estadoEnvio').textContent = '';
+  el('estadoEnvio').textContent = 'El retiro quedará en la base compartida y en el historial de este navegador.';
   const panel = el('hojas');
   panel.replaceChildren();
   for (let offset = 0; offset < renglones.length; offset += 14) {
@@ -788,15 +811,19 @@ async function guardarRetiro() {
   bloqueo.forEach(control=>control.disabled = true);
   const aviso = el('estadoEnvio');
   aviso.textContent = 'Guardando en la base compartida…';
+  let copiaLocal = false;
   try {
     await baseRetiros.guardar(r);
-  } catch (error) {
-    aviso.textContent = error.message+' El retiro sigue en pantalla para que puedas reintentar.';
-    if (error.message === 'Iniciá sesión nuevamente.' || !el('formAcceso').hidden) {
-      pedirAcceso('retiro', 'Iniciá sesión para guardar. Al volver al retiro vas a encontrar tu comprobante listo para reintentar.');
-    } else {
-      enfoqueVisible(aviso);
+    try {
+      const anteriores = leerHistorialLocal();
+      localStorage.setItem(claveHistorialLocal, JSON.stringify([r, ...anteriores.filter(retiro => retiro.folio !== r.folio)]));
+      copiaLocal = true;
+    } catch {
+      // La base ya confirmó el guardado. Un fallo del navegador no invalida el retiro.
     }
+  } catch (error) {
+    aviso.textContent = error.message + ' El retiro sigue en pantalla para que puedas reintentar.';
+    enfoqueVisible(aviso);
     return;
   } finally {
     bloqueo.forEach(control=>control.disabled = false);
@@ -811,7 +838,9 @@ async function guardarRetiro() {
   actualizarTecnicos();
   cambiarDetalle();
   el('confirmacion').textContent = 'Comprobante '+r.folio;
-  el('estadoGuardado').textContent = 'Retiro guardado en la base compartida. Podés descargar el PDF desde el historial.';
+  el('estadoGuardado').textContent = copiaLocal
+    ? 'Retiro guardado. Podés volver a descargar el PDF desde el historial de este navegador.'
+    : 'Retiro guardado en la base compartida. Este navegador no pudo conservar una copia local.';
   el('confirmado').hidden = false;
   el('confirmado').scrollIntoView({block:'nearest'});
   bajarPDF(r);
@@ -831,11 +860,11 @@ function seccion(destino) {
   el('registros').hidden = !historial;
   el('accesoBase').hidden = !base;
   el('confirmado').hidden = !nuevo || vistaPrevia || !ultimo;
-  if (historial) mostrarHistorial();
+
 }
 el('tabNuevo').onclick = () => seccion('retiro');
 el('tabHistorial').onclick = () => {seccion('historial'); cargarHistorial();};
-el('tabBase').onclick = () => seccion('base');
+el('tabBase').onclick = () => {volverTrasAcceso = undefined; seccion('base');};
 el('repetir').onclick = () => bajarPDF(ultimo);
 el('csv').onclick = exportar;
 el('borrar').onclick = invalidarFirma;
